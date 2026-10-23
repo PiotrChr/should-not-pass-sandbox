@@ -25,7 +25,7 @@ The code for these exists but has never been run. Testers wanted.
 ```
 python3 snp.py setup
 ```
-- Options: `--ram MB` (default 8192; 4096 is enough for a small frontend), `--cpus N` (default 2), `--password X` (default `dev`, console login only), `--iso FILE` (otherwise it uses the first `.iso` in this folder, or downloads Ubuntu 26.04.1 and checks its checksum).
+- Options: `--ram MB` (default 8192; 4096 is enough for a small frontend), `--cpus N` (default 4, or fewer if the host has fewer), `--password X` (default `dev`, console login only), `--iso FILE` (otherwise it uses the first `.iso` in this folder, or downloads Ubuntu 26.04.1 and checks its checksum).
 - It creates the host-only network (`192.168.56.0/24`, DHCP, no NAT), the VM with clipboard, drag and drop and USB off, and installs Ubuntu without asking questions. This takes 30 to 60 minutes. Don't click inside the VM window.
 - The install itself uses NAT, because the installer must reach the Ubuntu mirrors. No repo code runs yet. After the install the VM moves to the host-only network and loses NAT for good.
 - It then loads the firewall (asks for your sudo password), starts the proxy, and installs the tools over SSH: Node, npm, Python, Chrome, VS Code, Insomnia, Docker, Git and Claude Code. SSH is key-only, with a key made for you in `.snp/<vm name>/`.

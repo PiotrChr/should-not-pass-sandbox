@@ -334,7 +334,7 @@ def main():
     s.add_argument("--iso")
     s.add_argument("--password", default="dev", help="console login only (SSH is key-only, sudo needs none); default %(default)s")
     s.add_argument("--ram", type=int, default=8192, help="MB, default %(default)s (4096 is enough for a small frontend)")
-    s.add_argument("--cpus", type=int, default=2)
+    s.add_argument("--cpus", type=int, default=min(4, os.cpu_count() or 2))
     for c in ("up", "provision", "report", "snapshot", "down", "reset", "status"):
         sub.add_parser(c)
     a = p.parse_args()
