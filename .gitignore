@@ -1,0 +1,10 @@
+# VM disks and installer
+vms/
+*.iso
+SHA256SUMS
+# secrets and runtime output
+.env
+proxy.log
+probe-report.json
+__pycache__/
+.snp/
