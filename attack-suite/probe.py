@@ -8,13 +8,14 @@ import os
 import socket
 import sys
 import urllib.request
+import urllib.parse
 from pathlib import Path
 
 if os.environ.get("SNP_VM") != "1":
     sys.exit("refusing to run: this probes the network it is on. Run it inside the VM with SNP_VM=1")
 
-HOST = "192.168.56.1"      # host-only address of the host
-PROXY = f"http://{HOST}:3128"
+PROXY = os.environ.get("SNP_PROXY_URL") or os.environ.get("http_proxy") or "http://192.168.56.1:3128"
+HOST = urllib.parse.urlsplit(PROXY).hostname
 results = []
 
 
@@ -54,12 +55,35 @@ def http(url, proxy=PROXY, t=8):
 for port in (22, 3000, 7070, 8443, 32400):
     record(f"host port {port}", "blocked", tcp(HOST, port))
 record("host proxy port 3128", "open", tcp(HOST, 3128), "(must stay open)")
+if HOST == "10.0.2.100":
+    # The proxy forward is a virtual endpoint. Test the slirp host alias separately.
+    for port in (22, 3000, 7070, 8443, 32400):
+        record(f"NAT gateway port {port}", "blocked", tcp("10.0.2.2", port))
 
 # 2. Direct network access, no proxy
 record("raw tcp to 1.1.1.1:443", "blocked", tcp("1.1.1.1", 443))
 record("http without proxy", "blocked", http("https://example.com", proxy=None))
 for ip in ("10.0.2.2", "169.254.169.254", "192.168.178.1", "192.168.56.254"):
     record(f"direct {ip}:80", "blocked", tcp(ip, 80))
+record("direct IPv6 public HTTPS", "blocked", tcp("2606:4700:4700::1111", 443))
+
+
+def dns(host):
+    # A valid DNS A query. Any response proves UDP bypass, even if the answer is negative.
+    query = b"\x53\x4e\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x07example\x03com\x00\x00\x01\x00\x01"
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.settimeout(3)
+            sock.sendto(query, (host, 53))
+            sock.recvfrom(4096)
+            return "reached"
+    except OSError:
+        return "blocked"
+
+
+if HOST == "10.0.2.100":
+    record("direct DNS through QEMU", "blocked", dns("10.0.2.3"))
+    record("direct UDP public DNS", "blocked", dns("1.1.1.1"))
 
 # 3. Through the proxy: private targets
 for name, url in (("router via proxy", "http://192.168.178.1/"),
@@ -69,6 +93,7 @@ for name, url in (("router via proxy", "http://192.168.178.1/"),
                   ("host-only IP via proxy", f"http://{HOST}:7070/"),
                   ("decimal-encoded 127.0.0.1", "http://2130706433/"),
                   ("hex-encoded 127.0.0.1", "http://0x7f000001/"),
+                  ("octal-encoded 127.0.0.1", "http://0177.0.0.1/"),
                   ("hostname -> 127.0.0.1", "http://localhost:7070/"),
                   ("redirect to metadata", "https://httpbin.org/redirect-to?url=http://169.254.169.254/&status=302")):
     record(name, "blocked", http(url))
@@ -86,7 +111,7 @@ record("real secrets in environment", "none", "none" if not real else ",".join(r
 record("docker socket usable (info)", "open", "open" if os.access("/var/run/docker.sock", os.W_OK) else "blocked",
        "(dev is in the docker group by design: root inside the VM, not on the host)")
 record("shared folders mounted", "none", "none" if not [m for m in Path("/proc/mounts").read_text().splitlines()
-                                                         if "vboxsf" in m] else "mounted")
+                                                         if any(fs in m.split()[2:3] for fs in ("vboxsf", "9p", "virtiofs"))] else "mounted")
 
 # 6. Exfiltration: allowed by design while the proxy is in open mode (not a pass/fail of the network)
 record("exfil to public site (info)", "reached", http("https://example.com"),

@@ -15,3 +15,5 @@ Every probe has an expected result; `FAIL` means the sandbox leaked. Covers: hos
 Not automated (check by hand): clipboard in both directions, drag and drop, USB, host filesystem visibility.
 
 Expected today: the host-port probes FAIL until the nft rule on `vboxnet0` is loaded.
+
+On Apple Silicon, the suite reads the guest's `http_proxy` (`http://10.0.2.100:3128`), or an explicit `SNP_PROXY_URL`. Run it from a guest login session, or source `/etc/environment` first. QEMU-specific probes also test its host alias, direct DNS and public UDP DNS. The suite checks direct IPv6 and QEMU/virtio shared filesystems as well. QEMU's `restrict=on` takes the place of a host firewall rule.

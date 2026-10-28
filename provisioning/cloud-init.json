@@ -1,0 +1,24 @@
+{
+  "hostname": "snp",
+  "manage_etc_hosts": true,
+  "users": [{
+    "name": "@user@",
+    "shell": "/bin/bash",
+    "groups": ["sudo"],
+    "lock_passwd": false,
+    "plain_text_passwd": "@password@",
+    "ssh_authorized_keys": ["@public_key@"]
+  }],
+  "ssh_pwauth": false,
+  "disable_root": true,
+  "chpasswd": {
+    "expire": false,
+    "users": [{"name": "@user@", "password": "@password@", "type": "text"}]
+  },
+  "write_files": [{
+    "path": "/opt/snp/bootstrap.sh",
+    "permissions": "0700",
+    "content": "@bootstrap@"
+  }],
+  "runcmd": [["bash", "/opt/snp/bootstrap.sh"]]
+}

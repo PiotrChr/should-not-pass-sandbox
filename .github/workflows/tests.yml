@@ -1,0 +1,19 @@
+name: Offline tests
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install mitmproxy psutil ruff
+      - run: python -m unittest -v test_snp
+      - run: python test_egress_rules.py
+      - run: python test_credential_swap.py
+      - run: ruff check snp.py snp_vm.py vm_backends.py test_snp.py --select F
+      - run: bash -n setup-dev.sh setup-guest-proxy.sh report-installed.sh provisioning/bootstrap.sh

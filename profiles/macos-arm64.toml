@@ -1,0 +1,28 @@
+schema_version = 1
+backend = "qemu"
+host_systems = ["Darwin"]
+host_machines = ["arm64", "aarch64"]
+
+[resources]
+ram_mb = 8192
+cpus = 4
+disk_mb = 61440
+
+[image]
+kind = "cloud-image"
+base_url = "https://cloud-images.ubuntu.com/releases/26.04/release/"
+filename = "ubuntu-26.04-server-cloudimg-arm64.img"
+
+[guest]
+user = "dev"
+install_desktop = true
+
+[vm]
+binary = "qemu-system-aarch64"
+machine = "virt"
+accelerator = "hvf"
+cpu = "host"
+display = "cocoa"
+graphics_device = "virtio-gpu-pci"
+firmware_code = "edk2-aarch64-code.fd"
+firmware_vars = "edk2-arm-vars.fd"

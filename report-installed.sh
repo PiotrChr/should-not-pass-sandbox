@@ -7,6 +7,7 @@ snapv() { snap list "$1" 2>/dev/null | awk 'NR==2 {print $2" ("$4")"}'; }
 
 echo "Installed in this VM:"
 row "Ubuntu" "$(. /etc/os-release && echo "$PRETTY_NAME")"
+row "Architecture" "$(uname -m)"
 row "Node.js" "$(v node -v)"
 row "npm" "$(v npm -v)"
 row "Python" "$(v python3 --version | awk '{print $2}')"
@@ -14,8 +15,13 @@ row "pip" "$(v pip3 --version | awk '{print $2}')"
 row "Git" "$(v git --version | awk '{print $3}')"
 row "curl" "$(v curl --version | awk '{print $2}')"
 row "Google Chrome" "$(v google-chrome --version | sed 's/Google Chrome //; s/ *$//')"
-row "VS Code" "$(snapv code)"
-row "Insomnia" "$(snapv insomnia)"
+if [ "$(dpkg --print-architecture)" = arm64 ]; then
+  row "VS Code" "$(v code --version)"
+  row "Insomnia" "SKIPPED (no official Linux ARM64 desktop package)"
+else
+  row "VS Code" "$(snapv code)"
+  row "Insomnia" "$(snapv insomnia)"
+fi
 row "Docker" "$(v docker --version | sed 's/Docker version //; s/,.*//')"
 row "Docker Compose" "$(v docker compose version | sed 's/Docker Compose version //')"
 row "Claude Code" "$(v claude --version)"

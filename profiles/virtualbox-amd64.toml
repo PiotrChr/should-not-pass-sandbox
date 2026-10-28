@@ -1,0 +1,24 @@
+schema_version = 1
+backend = "virtualbox"
+host_systems = ["Linux", "Darwin", "Windows"]
+host_machines = ["x86_64", "amd64"]
+
+[resources]
+ram_mb = 8192
+cpus = 4
+disk_mb = 61440
+
+[image]
+kind = "installer-iso"
+base_url = "https://releases.ubuntu.com/26.04.1/"
+filename = "ubuntu-26.04.1-desktop-amd64.iso"
+
+[guest]
+user = "dev"
+install_desktop = false # The installation ISO already supplies the desktop.
+
+[vm]
+os_type = "Ubuntu_64"
+graphics_controller = "vmsvga"
+vram_mb = 128
+baseline_ssh_port = 2223
